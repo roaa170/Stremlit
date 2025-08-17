@@ -33,10 +33,10 @@ side_selected = st.sidebar._multiselect(
 
 # --- Gender filter ---
 gender = df["gender"].dropna().unique().tolist()
-gender_selected = st.sidebar.radio(
+gender_selected = st.sidebar.multiselect(
     "Choose gender",
     options=gender,
-    index=0
+    default= gender
 )
 if st.sidebar.button("❌ Reset Filters"):
     year_selected = "All"
@@ -52,7 +52,7 @@ if side_selected:
     filtered_df = filtered_df[filtered_df["citizenship"] == side_selected]
 
 if gender_selected:
-    filtered_df = filtered_df[filtered_df["gender"] == gender_selected]
+    filtered_df = filtered_df[filtered_df["gender"].isin(gender_selected)]
 
 #############################################
 # KPIs
@@ -75,39 +75,39 @@ with tab1:
     if 'year' in filtered_df.columns:
         fatalities_per_year = filtered_df.groupby('year').size().reset_index(name='count')
         fig = px.line(fatalities_per_year, x='year', y='count', markers=True,
-                      labels={'year': 'السنة', 'count': 'عدد الوفيات'})
+                      labels={'year': 'year', 'count': 'fatalities'})
         st.plotly_chart(fig, use_container_width=True)
 
 # ----- Tab 2 -----
 with tab2:
-    st.subheader("⚔️ الوفيات حسب الطرف")
+    st.subheader("⚔️ fatalities by side")
     if 'citizenship' in filtered_df.columns:
         fatalities_per_side = filtered_df['citizenship'].value_counts().reset_index()
         fatalities_per_side.columns = ['citizenship', 'count']
 
         fig = px.bar(fatalities_per_side, x='citizenship', y='count',
-                     color='citizenship', labels={'citizenship': 'الطرف', 'count': 'عدد الوفيات'})
+                     color='citizenship', labels={'citizenship': 'side', 'count': 'fatalities'})
         st.plotly_chart(fig, use_container_width=True)
 
         fig_pie = px.pie(fatalities_per_side, names='citizenship', values='count',
-                         title='نسبة الوفيات حسب الطرف')
+                         title='fatalities rate by side')
         st.plotly_chart(fig_pie, use_container_width=True)
 
 # ----- Tab 3 -----
 with tab3:
-    st.subheader("🧑‍🤝‍🧑 توزيع الأعمار والنوع")
+    st.subheader("🧑‍🤝‍🧑 Age and gender distribution")
     if 'age' in filtered_df.columns:
-        fig = px.histogram(filtered_df, x='age', nbins=20, title="توزيع الأعمار")
+        fig = px.histogram(filtered_df, x='age', nbins=20, title="age distribution ")
         st.plotly_chart(fig, use_container_width=True)
 
     if 'gender' in filtered_df.columns:
         gender_count = filtered_df['gender'].value_counts().reset_index()
         gender_count.columns = ['gender', 'count']
-        fig = px.pie(gender_count, names='gender', values='count', title="توزيع النوع")
+        fig = px.pie(gender_count, names='gender', values='count', title="gender distribution")
         st.plotly_chart(fig, use_container_width=True)
 
 # ----- Tab 4 -----
 with tab4:
-    st.subheader("🗂️ الجدول الكامل")
+    st.subheader("🗂️ data frame")
     columns_to_show = ['name', 'age', 'gender', 'citizenship', 'date_of_death', 'notes']
     st.dataframe(filtered_df[columns_to_show])
